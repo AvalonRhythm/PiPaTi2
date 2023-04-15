@@ -19,7 +19,7 @@ public class DBManager extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Crea la tabla "users" y "games
+        // Crea la tabla "users" y "games"
         db.execSQL("CREATE TABLE users (_id INTEGER PRIMARY KEY, nomUser text, pass text)");
         db.execSQL("CREATE TABLE games (_id INTEGER PRIMARY KEY, player1 text, scoreP1 int, player2 text, scoreP2 int)");
     }
