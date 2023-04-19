@@ -78,16 +78,9 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
 
                 // Comprobamos si las dos contraseñas coinciden para poder registrar el usuario
                 if(checkSignIn(password, password2)) {
-                    String query = "INSERT INTO users(nomUser, pass) VALUES(?, ?)";
-                    SQLiteStatement statement = db.compileStatement(query);
-                    statement.bindString(1, username);
-                    statement.bindString(2, password);
-                    long result = statement.executeInsert();
-                    if (result != -1) {
-                        Toast.makeText(Login.this, "Usuario registrado", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(Login.this, "Error al intentar registrarse", Toast.LENGTH_SHORT).show();
-                    }
+                    RegistroUsuario registroUsuario = new RegistroUsuario();
+                    registroUsuario.execute(username, password, "2023-04-23");
+
                 }
             }
         });
@@ -109,18 +102,7 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
                 String username = editTextUser.getText().toString();
                 String password = editTextPass.getText().toString();
                 // Si el usuario existe en la base de datos se inicia sesion con ese usuario
-                if (checkLogin(username, password)) {
-                    // Inicia sesión y muestra la actividad principal
-                    Intent intent = new Intent(Login.this, MenuPrincipal.class);
-                    intent.putExtra("user", username);
-                    startActivity(intent);
-                    //finish();
-
-                // En caso contrario se muestra un mensaje toast de error
-                } else {
-                    // Muestra un mensaje de error
-                    Toast.makeText(Login.this, "Datos incorrectos, vuelva a intentarlo", Toast.LENGTH_SHORT).show();
-                }
+                checkLogin(username, password);
             }
         });
 
@@ -129,13 +111,9 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
     }
 
     // Función que comprueba si el usuario existe en la BD
-    public boolean checkLogin(String nomUser, String pass) {
-        String query = "SELECT * FROM users WHERE nomUser = ? AND pass = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{nomUser, pass});
-        boolean result = cursor.moveToFirst();
-        cursor.close();
-
-        return result;
+    public void checkLogin(String username, String password) {
+        BuscarUsuario buscarUsuario = new BuscarUsuario(Login.this, username, password);
+        buscarUsuario.execute();
     }
 
     // Función que comprueba que dos contraseñas coinciden

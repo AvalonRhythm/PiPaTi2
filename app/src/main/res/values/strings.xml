@@ -32,6 +32,8 @@
 
     <!-- Ajustes -->
     <string name="BtnGuardar">Guardar</string>
+    <string name="BtnFotoGaleria">Foto de Perfil: Galería</string>
+    <string name="BtnFotoCamara">Foto de Perfil: Camara</string>
 
     <string name="Español">Español</string>
     <string name="Ingles">Ingles</string>
