@@ -25,6 +25,16 @@
                     android:layout_marginLeft="10dp"
                     android:background="@android:color/transparent"
                     android:scaleType="centerCrop" />
+                <ImageView
+                    android:id="@+id/menuPrincipalImagenPerfil"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentRight="true"
+                    android:background="@drawable/round_background"
+                    android:scaleType="centerCrop"/>
             </RelativeLayout>
 
             <LinearLayout

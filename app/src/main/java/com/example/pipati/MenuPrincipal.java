@@ -1,5 +1,6 @@
 package com.example.pipati;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
@@ -8,19 +9,43 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.bumptech.glide.Glide;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class MenuPrincipal extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     Button btnJugar, btnHistorial, btnAjustes;
     ImageButton btnBack;
+    ImageView fotoPerfil;
+    RequestQueue rq;
+    String respuesta;
     SharedPreferences sharedPreferences;
 
     @Override
@@ -38,6 +63,65 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
         btnHistorial = (Button) findViewById(R.id.botonHistorial);
         btnAjustes = (Button) findViewById(R.id.botonAjustes);
         btnBack = (ImageButton) findViewById(R.id.menuPrincipalFlechaAtras);
+        fotoPerfil = (ImageView) findViewById(R.id.menuPrincipalImagenPerfil);
+
+        String url = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/descargarImagen.php";
+        rq = Volley.newRequestQueue(getApplicationContext());
+        StringRequest sr = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                respuesta=response;
+
+                if(respuesta.equals("fail")){
+                    Toast.makeText(getApplicationContext(), "Fallo de PHP", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    //Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();
+                    Log.d("RESPUESTA", respuesta);
+
+                    try {
+                        JSONArray jsona = new JSONArray(respuesta);
+
+                        for (int i = 0; i < jsona.length(); i++) {
+                            JSONObject json = jsona.getJSONObject(i);
+
+                            byte[] imagenb = Base64.decode(json.getString("imagen"), Base64.DEFAULT);
+                            Bitmap bitmapimagen = BitmapFactory.decodeByteArray(imagenb, 0, imagenb.length);
+
+                            Glide.with(getApplicationContext())
+                                    .load(bitmapimagen) // bitmap es el Bitmap que se desea mostrar
+                                    .circleCrop() // redondear la imagen
+                                    .into(fotoPerfil);
+
+                            //fotoPerfil.setImageBitmap(bitmapimagen);
+                        }
+                    }catch (Exception e){
+                        //
+                    }
+                    rq.cancelAll("imagenPerfil");
+
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //si ha habido algun error con la solicitud
+                Toast.makeText(getApplicationContext(), error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                //se pasan todos los parametros necesarios en la solicitud
+                HashMap<String, String> parametros = new HashMap<String, String>();
+                parametros.put("username", getIntent().getStringExtra("user"));
+                return parametros;
+            }
+        };
+
+        //se envia la solicitud con los parametros
+        sr.setTag("imagenPerfil");
+        rq.add(sr);
+
 
         // Boton que abre la actividad de "Modo de Juego"
         btnJugar.setOnClickListener(new View.OnClickListener() {

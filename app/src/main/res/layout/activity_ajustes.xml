@@ -26,33 +26,41 @@
                     android:text="@string/BtnGuardar"/>
             </RelativeLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center">
-                <Button
-                    android:id="@+id/btnFotoGaleria"
-                    android:layout_width="160dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="10dp"
-                    android:layout_marginLeft="10dp"
-                    android:onClick="onClick"
-                    android:text="@string/BtnFotoGaleria" />
-                <Button
-                    android:id="@+id/btnFotoCamara"
-                    android:layout_width="160dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="10dp"
-                    android:layout_marginLeft="10dp"
-                    android:onClick="onClick"
-                    android:text="@string/BtnFotoCamara"/>
-        </LinearLayout>
-
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center">
+                    <Button
+                        android:id="@+id/btnFotoGaleria"
+                        android:layout_width="160dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:layout_marginLeft="10dp"
+                        android:text="@string/BtnFotoGaleria" />
+                    <Button
+                        android:id="@+id/btnFotoCamara"
+                        android:layout_width="160dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:layout_marginLeft="10dp"
+                        android:text="@string/BtnFotoCamara"/>
+            </LinearLayout>
             <FrameLayout
                 android:id="@+id/fragmentContainerAjustes"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <ImageView
+                    android:id="@+id/profilePicture"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="center"/>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 

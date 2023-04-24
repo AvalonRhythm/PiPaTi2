@@ -1,44 +1,60 @@
 package com.example.pipati;
 
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.preference.PreferenceManager;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+
 
 public class Ajustes extends AppCompatActivity {
 
     Button btnSave, btnPictureGallery, btnPictureCamera;
     SharedPreferences sharedPreferences;
-    private Uri imagen;
-    private Bitmap bimagen;
-    private String b64;
-    private String nombreimagen;
     private static final int IMAGE_CODE=112;
     private static final int PHOTO_CODE=111;
+    String UPLOAD_URL = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/subirImagen.php";
+    Bitmap bitmap;
+    Uri imageUri;
+    RequestQueue rq;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +103,55 @@ public class Ajustes extends AppCompatActivity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                /*
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                byte[] imageBytes = baos.toByteArray();
+
+                GuardarImagen guardarImagen = new GuardarImagen(getApplicationContext(), UPLOAD_URL, getIntent().getStringExtra("user"), imageBytes);
+                guardarImagen.execute();
+                */
+                Toast.makeText(Ajustes.this, getIntent().getStringExtra("user"), Toast.LENGTH_SHORT).show();
+
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                byte[] b = baos.toByteArray();
+                String b64 = Base64.encodeToString(b, Base64.DEFAULT);
+
+                StringRequest sr = new StringRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        String respuesta=response;
+
+                        Toast.makeText(Ajustes.this, respuesta, Toast.LENGTH_SHORT).show();
+
+                        rq.cancelAll("aniadirImagen");
+                        finish();
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        //si ha habido algun error con la solicitud
+                        Toast.makeText(Ajustes.this, error.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        //se pasan todos los parametros necesarios en la solicitud
+                        HashMap<String, String> parametros = new HashMap<String, String>();
+                        parametros.put("username", getIntent().getStringExtra("user"));
+                        parametros.put("image", b64);
+                        return parametros;
+                    }
+                };
+
+                //se envia la solicitud con los parametros
+                rq = Volley.newRequestQueue(Ajustes.this);
+                sr.setTag("aniadirImagen");
+                rq.add(sr);
+
+
                 Intent intent = new Intent(Ajustes.this, MenuPrincipal.class);
                 intent.putExtra("user", getIntent().getStringExtra("user"));
                 startActivity(intent);
@@ -98,20 +163,9 @@ public class Ajustes extends AppCompatActivity {
         btnPictureGallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //mirar si la version es mayor o igual a marshmallow
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    //si lo es mirar si se han dado los permisos de lectura
-                    if (ActivityCompat.checkSelfPermission(Ajustes.this, android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                        //si no hay permisos de lectura darselos
-                        ActivityCompat.requestPermissions(Ajustes.this, new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, IMAGE_CODE);
-                    } else {
-                        //si ya hay permisos
-                        elegirfoto();
-                    }
-                } else {
-                    //si la version es menor a marshmallow
-                    elegirfoto();
-                }
+                //la galería para seleccionar una imagen
+                Intent intentGallery = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intentGallery, IMAGE_CODE);
             }
         });
 
@@ -120,112 +174,63 @@ public class Ajustes extends AppCompatActivity {
         btnPictureCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //se ha de mirar primero si la version es igual o superior a la marshmallow
-                //si es igual o superior
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    //si no hay permisos para acceder a la cámara, o escribir
-                    if (ActivityCompat.checkSelfPermission(Ajustes.this,android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(Ajustes.this,android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                        //dar permisos de camara y escritura
-                        ActivityCompat.requestPermissions(Ajustes.this,new String[]{android.Manifest.permission.CAMERA, android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PHOTO_CODE);
-                    } else {
-                        //si ya hay permisos se abre la camara
-                        abrirCamara();
-                    }
-                }
-                //si la version es menor a la marshmallow
-                else {
-                    abrirCamara();
-                }
+                // Abrimos la cámara para tomar una foto
+                Intent intentCamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intentCamera, PHOTO_CODE);
             }
         });
 
         loadPreferences();
     }
-    //metodo para cuando se usa la camara
-    private void abrirCamara() {
-        ContentValues cv = new ContentValues();
-        //informacion de la imagen
-        cv.put(MediaStore.Images.Media.TITLE, "Nueva Imagen");
-        cv.put(MediaStore.Images.Media.DESCRIPTION, "Nueva Imagen sacada con la cámara");
-        //uri de la imagen
-        imagen = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv);
 
-        //crear intent para la camara
-        Intent camarai = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        camarai.putExtra(MediaStore.EXTRA_OUTPUT, imagen);
-        startActivityForResult(camarai, 1111);
+    public String getStringImagen(Bitmap bmp) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageBytes = baos.toByteArray();
+        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        return encodedImage;
     }
 
-    //metodo para cuando se elige foto de la galeria
-    private void elegirfoto() {
-        //crear intent para la galeria
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        startActivityForResult(intent, 1112);
-    }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        //si se esta sacando una foto
-        if(requestCode==PHOTO_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //se han dado los permisos necesarios
-                abrirCamara();
-            } else {
-                //no se han dado los permisos necesarios
-                Toast.makeText(this, "No se han aceptado los permisos", Toast.LENGTH_SHORT).show();
-            }
-        }
-        //si se esta eligiendo una foto de la galeria
-        if(requestCode==IMAGE_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //se han dado los permisos necesarios
-                elegirfoto();
-            } else {
-                //no se han dado los permisos necesarios
-                Toast.makeText(this, "No se han aceptado los permisos", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        //cuando ya se ha sacado la foto
-        if (resultCode == RESULT_OK && requestCode == 1111) {
-            //guardar la imagen en bitmap para luego subirla a la bd
-
-            //encontrar directorio de la galeria
-            File directorio = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-
-            //crear nombre de la foto sacada
-            String tiempo = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            nombreimagen = "IMG_" + tiempo + ".png";
-            File imagenfinal = new File(directorio, nombreimagen);
-
+    protected void onActivityResult(int reqCode, int resultCode, Intent data) {
+        super.onActivityResult(reqCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
             try {
-                //guardar la foto en un file y enviarla a la galeria
-                FileOutputStream fos = new FileOutputStream(imagenfinal);
-                bimagen.compress(Bitmap.CompressFormat.PNG, 100, fos);
-                //ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                //byte[] b = baos.toByteArray();
-                //b64 = Base64.encodeToString(b, Base64.DEFAULT);
-                //fos.flush();
-                fos.close();
-
-                //crear intent para que guarde la informacion de la imagen
-                //Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                //intent.setData(Uri.fromFile(imagenfinal));
-                //sendBroadcast(intent);
-
-                Toast.makeText(this, "Se ha guardado la imagen en la galería", Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {
-                //no hace nada
+                imageUri = data.getData();
+                if(imageUri==null){
+                    bitmap = (Bitmap) data.getExtras().get("data");
+                    ImageView fotoPerfil = (ImageView) findViewById(R.id.profilePicture);
+                    fotoPerfil.setImageBitmap(bitmap);
+                }else {
+                    InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                    bitmap = BitmapFactory.decodeStream(imageStream);
+                    ImageView fotoPerfil = (ImageView) findViewById(R.id.profilePicture);
+                    fotoPerfil.setImageBitmap(bitmap);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(Ajustes.this, "1", Toast.LENGTH_SHORT).show();
             }
-
+        }else {
+            Toast.makeText(Ajustes.this,  "2",Toast.LENGTH_SHORT).show();
         }
+    }
+
+    //COMPACTAR IMAGEN
+    protected byte[] tratarImagen(byte[] img){
+        /**
+         * Basado en el código extraído de Stack Overflow
+         * Pregunta: https://stackoverflow.com/questions/57107489/sqliteblobtoobigexception-row-too-big-to-fit-into-cursorwindow-while-writing-to
+         * Autor: https://stackoverflow.com/users/3694451/leo-vitor
+         */
+        while(img.length > 50000){
+            Bitmap bitmap = BitmapFactory.decodeByteArray(img, 0, img.length);
+            Bitmap compacto = Bitmap.createScaledBitmap(bitmap, (int)(bitmap.getWidth()*0.8), (int)(bitmap.getHeight()*0.8), true);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            compacto.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            img = stream.toByteArray();
+        }
+        return img;
     }
 
     private void loadPreferences(){
