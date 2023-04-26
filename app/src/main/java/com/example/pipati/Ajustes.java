@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -47,13 +48,14 @@ import java.util.Map;
 public class Ajustes extends AppCompatActivity {
 
     Button btnSave, btnPictureGallery, btnPictureCamera;
+    ImageView fotoPreview;
     SharedPreferences sharedPreferences;
     private static final int IMAGE_CODE=112;
     private static final int PHOTO_CODE=111;
     String UPLOAD_URL = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/subirImagen.php";
     Bitmap bitmap;
     Uri imageUri;
-    RequestQueue rq;
+    RequestQueue request;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,58 +101,53 @@ public class Ajustes extends AppCompatActivity {
                 .replace(R.id.fragmentContainerAjustes, fragmentoPreferencias)
                 .commit();
 
+        fotoPreview = (ImageView) findViewById(R.id.profilePicture);
+
         btnSave = (Button) findViewById(R.id.btnAtrasAjustes);
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                byte[] imageBytes = baos.toByteArray();
-
-                GuardarImagen guardarImagen = new GuardarImagen(getApplicationContext(), UPLOAD_URL, getIntent().getStringExtra("user"), imageBytes);
-                guardarImagen.execute();
-                */
                 Toast.makeText(Ajustes.this, getIntent().getStringExtra("user"), Toast.LENGTH_SHORT).show();
 
+                if(bitmap!=null) {
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                byte[] b = baos.toByteArray();
-                String b64 = Base64.encodeToString(b, Base64.DEFAULT);
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                    byte[] b = baos.toByteArray();
+                    String b64 = Base64.encodeToString(b, Base64.DEFAULT);
 
-                StringRequest sr = new StringRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        String respuesta=response;
+                    StringRequest sr = new StringRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            String respuesta = response;
 
-                        Toast.makeText(Ajustes.this, respuesta, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Ajustes.this, respuesta, Toast.LENGTH_SHORT).show();
 
-                        rq.cancelAll("aniadirImagen");
-                        finish();
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        //si ha habido algun error con la solicitud
-                        Toast.makeText(Ajustes.this, error.toString(), Toast.LENGTH_SHORT).show();
-                    }
-                }) {
-                    @Override
-                    protected Map<String, String> getParams() throws AuthFailureError {
-                        //se pasan todos los parametros necesarios en la solicitud
-                        HashMap<String, String> parametros = new HashMap<String, String>();
-                        parametros.put("username", getIntent().getStringExtra("user"));
-                        parametros.put("image", b64);
-                        return parametros;
-                    }
-                };
+                            request.cancelAll("aniadirImagen");
+                            finish();
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            //si ha habido algun error con la solicitud
+                            Toast.makeText(Ajustes.this, error.toString(), Toast.LENGTH_SHORT).show();
+                        }
+                    }) {
+                        @Override
+                        protected Map<String, String> getParams() throws AuthFailureError {
+                            //se pasan todos los parametros necesarios en la solicitud
+                            HashMap<String, String> parametros = new HashMap<String, String>();
+                            parametros.put("username", getIntent().getStringExtra("user"));
+                            parametros.put("image", b64);
+                            return parametros;
+                        }
+                    };
 
-                //se envia la solicitud con los parametros
-                rq = Volley.newRequestQueue(Ajustes.this);
-                sr.setTag("aniadirImagen");
-                rq.add(sr);
-
+                    //se envia la solicitud con los parametros
+                    request = Volley.newRequestQueue(Ajustes.this);
+                    sr.setTag("aniadirImagen");
+                    request.add(sr);
+                }
 
                 Intent intent = new Intent(Ajustes.this, MenuPrincipal.class);
                 intent.putExtra("user", getIntent().getStringExtra("user"));
@@ -199,38 +196,36 @@ public class Ajustes extends AppCompatActivity {
                 imageUri = data.getData();
                 if(imageUri==null){
                     bitmap = (Bitmap) data.getExtras().get("data");
-                    ImageView fotoPerfil = (ImageView) findViewById(R.id.profilePicture);
-                    fotoPerfil.setImageBitmap(bitmap);
+                    fotoPreview.setImageBitmap(bitmap);
                 }else {
                     InputStream imageStream = getContentResolver().openInputStream(imageUri);
                     bitmap = BitmapFactory.decodeStream(imageStream);
-                    ImageView fotoPerfil = (ImageView) findViewById(R.id.profilePicture);
-                    fotoPerfil.setImageBitmap(bitmap);
+                    fotoPreview.setImageBitmap(bitmap);
                 }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-                Toast.makeText(Ajustes.this, "1", Toast.LENGTH_SHORT).show();
             }
-        }else {
-            Toast.makeText(Ajustes.this,  "2",Toast.LENGTH_SHORT).show();
         }
     }
 
-    //COMPACTAR IMAGEN
-    protected byte[] tratarImagen(byte[] img){
-        /**
-         * Basado en el código extraído de Stack Overflow
-         * Pregunta: https://stackoverflow.com/questions/57107489/sqliteblobtoobigexception-row-too-big-to-fit-into-cursorwindow-while-writing-to
-         * Autor: https://stackoverflow.com/users/3694451/leo-vitor
-         */
-        while(img.length > 50000){
-            Bitmap bitmap = BitmapFactory.decodeByteArray(img, 0, img.length);
-            Bitmap compacto = Bitmap.createScaledBitmap(bitmap, (int)(bitmap.getWidth()*0.8), (int)(bitmap.getHeight()*0.8), true);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            compacto.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            img = stream.toByteArray();
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        fotoPreview = (ImageView) findViewById(R.id.profilePicture);
+        if(fotoPreview.getDrawable()!=null) {
+            bitmap = ((BitmapDrawable) fotoPreview.getDrawable()).getBitmap();
+            outState.putParcelable("imagen", bitmap);
         }
-        return img;
+    }
+
+    // Se recuperan los elementos guardados
+    @Override
+    protected void onRestoreInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        bitmap = outState.getParcelable("imagen");
+        fotoPreview.setImageBitmap(outState.getParcelable("imagen"));
     }
 
     private void loadPreferences(){

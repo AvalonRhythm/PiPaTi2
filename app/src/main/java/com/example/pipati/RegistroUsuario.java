@@ -24,12 +24,10 @@ public class RegistroUsuario extends AsyncTask<String, Void, String> {
         try {
             String username = params[0];
             String pass = params[1];
-            String birthdate = params[2];
 
             String urlString = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/registro.php";
             String data = "username=" + URLEncoder.encode(username, "UTF-8") +
-                    "&pass=" + URLEncoder.encode(pass, "UTF-8") +
-                    "&birthday=" + URLEncoder.encode(birthdate, "UTF-8");
+                    "&pass=" + URLEncoder.encode(pass, "UTF-8");
 
             URL url = new URL(urlString);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();

@@ -1,9 +1,11 @@
 package com.example.pipati;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
+import android.content.ContentValues;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,6 +31,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,9 +49,11 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
     Button btnJugar, btnHistorial, btnAjustes;
     ImageButton btnBack;
     ImageView fotoPerfil;
-    RequestQueue rq;
-    String respuesta;
+    StringRequest stringRequest;
+    RequestQueue request;
     SharedPreferences sharedPreferences;
+    Bitmap imagen;
+    String token;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,21 +73,19 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
         fotoPerfil = (ImageView) findViewById(R.id.menuPrincipalImagenPerfil);
 
         String url = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/descargarImagen.php";
-        rq = Volley.newRequestQueue(getApplicationContext());
-        StringRequest sr = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+        request = Volley.newRequestQueue(getApplicationContext());
+        stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                respuesta=response;
-
-                if(respuesta.equals("fail")){
+                if(response.equals("fail")){
                     Toast.makeText(getApplicationContext(), "Fallo de PHP", Toast.LENGTH_SHORT).show();
                 }
                 else{
                     //Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();
-                    Log.d("RESPUESTA", respuesta);
+                    Log.d("RESPUESTA_DESCARGAR_IMAGEN", response);
 
                     try {
-                        JSONArray jsona = new JSONArray(respuesta);
+                        JSONArray jsona = new JSONArray(response);
 
                         for (int i = 0; i < jsona.length(); i++) {
                             JSONObject json = jsona.getJSONObject(i);
@@ -92,16 +97,15 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
                                     .load(bitmapimagen) // bitmap es el Bitmap que se desea mostrar
                                     .circleCrop() // redondear la imagen
                                     .into(fotoPerfil);
-
-                            //fotoPerfil.setImageBitmap(bitmapimagen);
                         }
                     }catch (Exception e){
                         //
                     }
-                    rq.cancelAll("imagenPerfil");
+                    request.cancelAll("descargarImagenPerfil");
 
                 }
             }
+
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
@@ -119,9 +123,8 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
         };
 
         //se envia la solicitud con los parametros
-        sr.setTag("imagenPerfil");
-        rq.add(sr);
-
+        stringRequest.setTag("descargarImagenPerfil");
+        request.add(stringRequest);
 
         // Boton que abre la actividad de "Modo de Juego"
         btnJugar.setOnClickListener(new View.OnClickListener() {
@@ -167,8 +170,71 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
             }
         });
 
+        FirebaseMessaging.getInstance().subscribeToTopic("users").addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    Log.d("SUSCRIPCION_EXITOSA", "Suscripcion exitosa");
+                } else {
+                    Log.d("SUSCRIPCION_FALLIDA", "Suscripcion fallida");
+
+                }
+            }
+        });
+
+        registrarToken();
         loadPreferences();
     }
+
+    private void registrarToken(){
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w("ERROR_GET_TOKEN", "Fetching FCM registration token failed", task.getException());
+                            return;
+                        }
+                        // Get new FCM registration token
+                        token = task.getResult();
+
+                        Log.d("TOKEN_DISPOSITIVO", token);
+                        //Toast.makeText(getApplicationContext(), token, Toast.LENGTH_SHORT).show();
+
+                        String url = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/registrarDispositivo.php";
+                        stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                Log.d("REGISTRO_TOKEN", response);
+                                //Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();
+                                request.cancelAll("registrarToken");
+                            }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                //si ha habido algun error con la solicitud
+                                Log.d("ERROR_REGISTRO_TOKEN", error.toString());
+                                Toast.makeText(getApplicationContext(), error.toString(), Toast.LENGTH_SHORT).show();
+                            }
+                        }) {
+                            @Override
+                            protected Map<String, String> getParams() throws AuthFailureError {
+                                //se pasan todos los parametros necesarios en la solicitud
+                                HashMap<String, String> parametros = new HashMap<String, String>();
+                                parametros.put("username", getIntent().getStringExtra("user"));
+                                parametros.put("token", token);
+                                return parametros;
+                            }
+                        };
+
+                        //se envia la solicitud con los parametros
+                        request = Volley.newRequestQueue(getApplicationContext());
+                        stringRequest.setTag("subirToken");
+                        request.add(stringRequest);
+                        Volley.newRequestQueue(getApplicationContext()).add(stringRequest);
+                    }
+                });
+    }
+
 
     // Funcion que carga las preferencias del usuario
     private void loadPreferences(){
@@ -216,6 +282,11 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
         outState.putString("Jugar", btnJugar.getText().toString());
         outState.putString("Historial", btnHistorial.getText().toString());
         outState.putString("Ajustes", btnAjustes.getText().toString());
+
+        if (fotoPerfil.getDrawable() != null) {
+            imagen = ((BitmapDrawable)fotoPerfil.getDrawable()).getBitmap();
+            outState.putParcelable("imagen", imagen);
+        }
     }
 
     @Override
@@ -225,6 +296,9 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
         btnJugar.setText(outState.getString("Jugar"));
         btnHistorial.setText(outState.getString("Historial"));
         btnAjustes.setText(outState.getString("Ajustes"));
+
+        imagen = outState.getParcelable("imagen");
+        fotoPerfil.setImageBitmap(outState.getParcelable("imagen"));
     }
 
     @Override

@@ -20,6 +20,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.scottyab.aescrypt.AESCrypt;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLData;
 import java.util.Locale;
@@ -78,8 +80,15 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
 
                 // Comprobamos si las dos contraseñas coinciden para poder registrar el usuario
                 if(checkSignIn(password, password2)) {
+                    String  passwordCrypt="";
+                    try {
+                        passwordCrypt = AESCrypt.encrypt("Encriptado contraseña", password);
+                    }catch (Exception e){
+                        //no hace nada
+                    }
+
                     RegistroUsuario registroUsuario = new RegistroUsuario();
-                    registroUsuario.execute(username, password, "2023-04-23");
+                    registroUsuario.execute(username, passwordCrypt);
 
                 }
             }
@@ -112,7 +121,13 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
 
     // Función que comprueba si el usuario existe en la BD
     public void checkLogin(String username, String password) {
-        BuscarUsuario buscarUsuario = new BuscarUsuario(Login.this, username, password);
+        String  passwordCrypt="";
+        try {
+            passwordCrypt = AESCrypt.encrypt("Encriptado contraseña", password);
+        }catch (Exception e){
+            //no hace nada
+        }
+        BuscarUsuario buscarUsuario = new BuscarUsuario(Login.this, username, passwordCrypt);
         buscarUsuario.execute();
     }
 
