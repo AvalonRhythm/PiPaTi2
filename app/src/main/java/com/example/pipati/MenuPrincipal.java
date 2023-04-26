@@ -101,11 +101,10 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
                     }catch (Exception e){
                         //
                     }
-                    request.cancelAll("descargarImagenPerfil");
 
+                    request.cancelAll("descargarImagenPerfil");
                 }
             }
-
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {

@@ -91,7 +91,6 @@ public class ModoJuego extends AppCompatActivity implements SharedPreferences.On
                         //
                     }
                     request.cancelAll("descargarImagenPerfil");
-
                 }
             }
         }, new Response.ErrorListener() {
@@ -109,6 +108,9 @@ public class ModoJuego extends AppCompatActivity implements SharedPreferences.On
                 return parametros;
             }
         };
+
+        stringRequest.setTag("descargarImagenPerfil");
+        request.add(stringRequest);
 
         // Se guarda el modo de juego seleccionado, ya que el juego sera diferente en funcion del mismo
         btnClassicMode.setOnClickListener(new View.OnClickListener() {

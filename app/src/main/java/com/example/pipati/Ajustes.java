@@ -55,6 +55,7 @@ public class Ajustes extends AppCompatActivity {
     String UPLOAD_URL = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/subirImagen.php";
     Bitmap bitmap;
     Uri imageUri;
+    String b64;
     RequestQueue request;
 
     @Override
@@ -114,9 +115,9 @@ public class Ajustes extends AppCompatActivity {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                     byte[] b = baos.toByteArray();
-                    String b64 = Base64.encodeToString(b, Base64.DEFAULT);
+                    b64 = Base64.encodeToString(b, Base64.DEFAULT);
 
-                    StringRequest sr = new StringRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<String>() {
+                    StringRequest stringRequest = new StringRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             String respuesta = response;
@@ -145,8 +146,8 @@ public class Ajustes extends AppCompatActivity {
 
                     //se envia la solicitud con los parametros
                     request = Volley.newRequestQueue(Ajustes.this);
-                    sr.setTag("aniadirImagen");
-                    request.add(sr);
+                    stringRequest.setTag("aniadirImagen");
+                    request.add(stringRequest);
                 }
 
                 Intent intent = new Intent(Ajustes.this, MenuPrincipal.class);
@@ -179,15 +180,6 @@ public class Ajustes extends AppCompatActivity {
 
         loadPreferences();
     }
-
-    public String getStringImagen(Bitmap bmp) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] imageBytes = baos.toByteArray();
-        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-        return encodedImage;
-    }
-
 
     protected void onActivityResult(int reqCode, int resultCode, Intent data) {
         super.onActivityResult(reqCode, resultCode, data);
