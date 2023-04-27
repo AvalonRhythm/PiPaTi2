@@ -181,6 +181,11 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
             }
         });
 
+        if(getIntent().getStringExtra("Ajustes")!=null){
+            getIntent().removeExtra("Ajustes");
+            recreate();
+        }
+
         registrarToken();
         loadPreferences();
     }

@@ -152,6 +152,7 @@ public class Ajustes extends AppCompatActivity {
 
                 Intent intent = new Intent(Ajustes.this, MenuPrincipal.class);
                 intent.putExtra("user", getIntent().getStringExtra("user"));
+                intent.putExtra("Ajustes", "ajustes");
                 startActivity(intent);
                 finish();
             }
