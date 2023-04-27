@@ -87,6 +87,7 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
                         //no hace nada
                     }
 
+                    // Se registra el usuario en la base de datos
                     RegistroUsuario registroUsuario = new RegistroUsuario();
                     registroUsuario.execute(username, passwordCrypt);
 
@@ -127,6 +128,8 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
         }catch (Exception e){
             //no hace nada
         }
+
+        //Se busca el usuario introducido en la base de datos
         BuscarUsuario buscarUsuario = new BuscarUsuario(Login.this, username, passwordCrypt);
         buscarUsuario.execute();
     }

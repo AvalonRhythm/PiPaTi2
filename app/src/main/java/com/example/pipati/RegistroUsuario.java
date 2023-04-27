@@ -1,12 +1,15 @@
 package com.example.pipati;
 
-import android.content.Context;
+/**
+ * Extraido de: https://stackoverflow.com/questions/25647881/android-asynctask-example-and-explanation
+ * Modificado por: Hugo Robles, para cambiar el nomobre de algunos elementos.
+ **/
+
 import android.os.AsyncTask;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -14,8 +17,6 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-
-import javax.net.ssl.HttpsURLConnection;
 
 public class RegistroUsuario extends AsyncTask<String, Void, String> {
 
@@ -25,6 +26,7 @@ public class RegistroUsuario extends AsyncTask<String, Void, String> {
             String username = params[0];
             String pass = params[1];
 
+            // Url del php que se encargara de gestionar la peticion en el servidor
             String urlString = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/registro.php";
             String data = "username=" + URLEncoder.encode(username, "UTF-8") +
                     "&pass=" + URLEncoder.encode(pass, "UTF-8");
@@ -63,7 +65,6 @@ public class RegistroUsuario extends AsyncTask<String, Void, String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        // Mostrar la respuesta del servidor en un Toast
     }
 }
 

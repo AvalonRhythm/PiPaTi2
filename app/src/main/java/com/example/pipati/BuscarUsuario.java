@@ -1,5 +1,10 @@
 package com.example.pipati;
 
+/**
+ * Extraido de: https://stackoverflow.com/questions/25647881/android-asynctask-example-and-explanation
+ * Modificado por: Hugo Robles, para cambiar el nomobre de algunos elementos.
+ **/
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -18,6 +23,8 @@ import java.net.URLEncoder;
 
 public class BuscarUsuario extends AsyncTask<Void, Void, Boolean>  {
 
+
+
     private Context mContext;
     private String username;
     private String pass;
@@ -31,6 +38,7 @@ public class BuscarUsuario extends AsyncTask<Void, Void, Boolean>  {
     @Override
     protected Boolean doInBackground(Void... voids) {
         try {
+            // Url del php que se encargara de gestionar la peticion en el servidor
             String urlString = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/login.php";
             String data = "username=" + URLEncoder.encode(username, "UTF-8") +
                     "&pass=" + URLEncoder.encode(pass, "UTF-8");
@@ -70,9 +78,7 @@ public class BuscarUsuario extends AsyncTask<Void, Void, Boolean>  {
             Intent intent = new Intent(mContext, MenuPrincipal.class);
             intent.putExtra("user", username);
             mContext.startActivity(intent);
-            //finish();
 
-            // En caso contrario se muestra un mensaje toast de error
         } else {
             // Muestra un mensaje de error
             Toast.makeText(mContext, "Datos incorrectos, vuelva a intentarlo", Toast.LENGTH_SHORT).show();

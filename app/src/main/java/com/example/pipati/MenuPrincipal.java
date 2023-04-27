@@ -72,6 +72,11 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
         btnBack = (ImageButton) findViewById(R.id.menuPrincipalFlechaAtras);
         fotoPerfil = (ImageView) findViewById(R.id.menuPrincipalImagenPerfil);
 
+        /**
+         * Extraido de: https://stackoverflow.com/questions/17571759/how-do-you-use-the-android-volley-api
+         * Modificado por: Hugo Robles, para cambiar el nomobre de algunos elementos.
+         **/
+
         String url = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/descargarImagen.php";
         request = Volley.newRequestQueue(getApplicationContext());
         stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
@@ -181,11 +186,7 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
             }
         });
 
-        if(getIntent().getStringExtra("Ajustes")!=null){
-            getIntent().removeExtra("Ajustes");
-            recreate();
-        }
-
+        // Con esta función conseguimos el token del dispositivo y lo guardamos en la base de datos
         registrarToken();
         loadPreferences();
     }
@@ -204,13 +205,18 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
                         Log.d("TOKEN_DISPOSITIVO", token);
                         //Toast.makeText(getApplicationContext(), token, Toast.LENGTH_SHORT).show();
 
+
+                        /**
+                         * Extraido de: https://stackoverflow.com/questions/17571759/how-do-you-use-the-android-volley-api
+                         * Modificado por: Hugo Robles, para cambiar el nomobre de algunos elementos.
+                         **/
+
                         String url = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/registrarDispositivo.php";
                         stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
                                 Log.d("REGISTRO_TOKEN", response);
                                 //Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();
-                                request.cancelAll("registrarToken");
                             }
                         }, new Response.ErrorListener() {
                             @Override
@@ -232,7 +238,6 @@ public class MenuPrincipal extends AppCompatActivity implements SharedPreference
 
                         //se envia la solicitud con los parametros
                         request = Volley.newRequestQueue(getApplicationContext());
-                        stringRequest.setTag("subirToken");
                         request.add(stringRequest);
                         Volley.newRequestQueue(getApplicationContext()).add(stringRequest);
                     }

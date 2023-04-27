@@ -50,8 +50,6 @@ public class Ajustes extends AppCompatActivity {
     Button btnSave, btnPictureGallery, btnPictureCamera;
     ImageView fotoPreview;
     SharedPreferences sharedPreferences;
-    private static final int IMAGE_CODE=112;
-    private static final int PHOTO_CODE=111;
     String UPLOAD_URL = "http://ec2-54-93-62-124.eu-central-1.compute.amazonaws.com/hrobles002/WEB/subirImagen.php";
     Bitmap bitmap;
     Uri imageUri;
@@ -108,23 +106,30 @@ public class Ajustes extends AppCompatActivity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(Ajustes.this, getIntent().getStringExtra("user"), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(Ajustes.this, getIntent().getStringExtra("user"), Toast.LENGTH_SHORT).show();
 
+                // Comprobamos que el usuario haya seleccionado una imagen para evitar errores
                 if(bitmap!=null) {
 
+                    // Convertimos la imagen en un formato adecuado para guardarla en la base de datos
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                     byte[] b = baos.toByteArray();
                     b64 = Base64.encodeToString(b, Base64.DEFAULT);
 
+                    // Creamos la petición para guardar la imagen
+
+                    /**
+                     * Extraido de: https://stackoverflow.com/questions/17571759/how-do-you-use-the-android-volley-api
+                     * Modificado por: Hugo Robles, para cambiar el nomobre de algunos elementos.
+                     **/
                     StringRequest stringRequest = new StringRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             String respuesta = response;
 
-                            Toast.makeText(Ajustes.this, respuesta, Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(Ajustes.this, respuesta, Toast.LENGTH_SHORT).show();
 
-                            request.cancelAll("aniadirImagen");
                             finish();
                         }
                     }, new Response.ErrorListener() {
@@ -146,13 +151,11 @@ public class Ajustes extends AppCompatActivity {
 
                     //se envia la solicitud con los parametros
                     request = Volley.newRequestQueue(Ajustes.this);
-                    stringRequest.setTag("aniadirImagen");
                     request.add(stringRequest);
                 }
 
                 Intent intent = new Intent(Ajustes.this, MenuPrincipal.class);
                 intent.putExtra("user", getIntent().getStringExtra("user"));
-                intent.putExtra("Ajustes", "ajustes");
                 startActivity(intent);
                 finish();
             }
@@ -164,18 +167,18 @@ public class Ajustes extends AppCompatActivity {
             public void onClick(View v) {
                 //la galería para seleccionar una imagen
                 Intent intentGallery = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intentGallery, IMAGE_CODE);
+                startActivityForResult(intentGallery, 112);
             }
         });
 
-        //boton sacar foto con la camara
+        // Boton para sacar una foto con la camara
         btnPictureCamera = findViewById(R.id.btnFotoCamara);
         btnPictureCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Abrimos la cámara para tomar una foto
                 Intent intentCamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intentCamera, PHOTO_CODE);
+                startActivityForResult(intentCamera, 111);
             }
         });
 
@@ -184,6 +187,8 @@ public class Ajustes extends AppCompatActivity {
 
     protected void onActivityResult(int reqCode, int resultCode, Intent data) {
         super.onActivityResult(reqCode, resultCode, data);
+
+        // Colocamos la imagen en el ImageView para poder verla antes de guardarla
         if (resultCode == RESULT_OK) {
             try {
                 imageUri = data.getData();
