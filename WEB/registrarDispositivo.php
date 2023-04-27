@@ -15,7 +15,6 @@ $token = $_POST["token"];
 $nomUser = $_POST["username"];
 
 $sql = "UPDATE users SET DEVICEID = '$token' WHERE nomUser = '$nomUser'";
-//$sql = "UPDATE users SET DEVICEID = '$token' WHERE nomUser = 'Pepe'";
 
 $result = mysqli_query($conn, $sql);
 
