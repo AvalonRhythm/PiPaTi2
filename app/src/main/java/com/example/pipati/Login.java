@@ -80,6 +80,8 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
 
                 // Comprobamos si las dos contraseñas coinciden para poder registrar el usuario
                 if(checkSignIn(password, password2)) {
+
+                    // Se encripta la contraseña para guardarla en la base de datos remota
                     String  passwordCrypt="";
                     try {
                         passwordCrypt = AESCrypt.encrypt("Encriptado contraseña", password);
@@ -122,6 +124,8 @@ public class Login extends AppCompatActivity implements SharedPreferences.OnShar
 
     // Función que comprueba si el usuario existe en la BD
     public void checkLogin(String username, String password) {
+
+        // Aqui se encripta la contraseña para compararla con la guardada en el servidor
         String  passwordCrypt="";
         try {
             passwordCrypt = AESCrypt.encrypt("Encriptado contraseña", password);
