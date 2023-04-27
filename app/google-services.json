@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "883219425897",
+    "project_id": "pipati",
+    "storage_bucket": "pipati.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:883219425897:android:6513ec7ba69702b24090f8",
+        "android_client_info": {
+          "package_name": "com.example.pipati"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "883219425897-bdaidh3fp8hrn1tsja2u16c5pspsimh6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXUJwcsKRecQLWhAEUNtnN_f_mdXE5UTs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "883219425897-bdaidh3fp8hrn1tsja2u16c5pspsimh6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
